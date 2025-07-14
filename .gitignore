@@ -1,0 +1,22 @@
+# 环境变量配置文件
+.env
+.env.*
+
+# 构建输出目录
+build/
+dist/
+bin/
+
+# Go module相关
+go.sum
+vendor/
+
+# IDE 配置和缓存
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 日志与测试产出
+*.log
+coverage.out
