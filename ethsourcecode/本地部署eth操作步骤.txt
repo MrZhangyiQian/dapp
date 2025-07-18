@@ -1,0 +1,56 @@
+1、下载源文件 git clone git@github.com:ethereum/go-ethereum.git
+2、cmd当前目录 make geth
+3、 .\geth.exe --dev --http
+4、还是当前目录.\geth attach http://localhost:8545
+5、
+Welcome to the Geth JavaScript console!
+
+instance: Geth/v1.16.2-unstable-b4b4068f-20250718/windows-amd64/go1.24.3
+at block: 0 (Thu Jan 01 1970 08:00:00 GMT+0800 (CST))
+ datadir:
+ modules: admin:1.0 eth:1.0 miner:1.0 net:1.0 rpc:1.0 web3:1.0
+
+To exit, press ctrl-d or type exit
+> eth.accounts
+["0x71562b71999873db5b286df957af199ec94617f7"]
+> eth.sendTransaction({
+......     from: eth.accounts[0],
+......     to: "0xc3f7d18d8a8f8ef1d4b5a8157d98f3ef58f4e9d4", // 新地址
+......     value: web3.toWei(5, "ether")
+...... })
+"0x81b881c4e28ba07eb5a2f3ba9b7b3216fb6a23875e8dc86fac9c1dac4eab5463"
+> eth.blockNumber
+1
+
+> eth.getBlock(eth.blockNumber)
+{
+  baseFeePerGas: 875000000,
+  blobGasUsed: 0,
+  difficulty: 0,
+  excessBlobGas: 0,
+  extraData: "0xda83011002846765746888676f312e32342e338777696e646f7773",
+  gasLimit: 11511229,
+  gasUsed: 21000,
+  hash: "0xe4e313c9b9ca5739afc9f42ad9ae7e0f91b06c66b26b02100e40c2caa6d4abb8",
+  logsBloom: "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+  miner: "0x71562b71999873db5b286df957af199ec94617f7",
+  mixHash: "0xbd3d51955afc902a0c5b7eb6830c44f9cfdeaae868fb66a07f55f5b32f4d4828",
+  nonce: "0x0000000000000000",
+  number: 1,
+  parentBeaconBlockRoot: "0x0000000000000000000000000000000000000000000000000000000000000000",
+  parentHash: "0xd560b1af1d2a5d590eecd7d2fc1297aae3945c2d6b4a8fb0e1e1bf85a6c69f8f",
+  receiptsRoot: "0xf78dfb743fbd92ade140711c8bbc542b5e307f0ab7984eff35d751969fe57efa",
+  requestsHash: "0xe3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  sha3Uncles: "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+  size: 762,
+  stateRoot: "0xe4bcc3cf06b14494c2e33a73ff016ba83bff5f9bff3e87bbc6b7020afe85dc20",
+  timestamp: 1752822633,
+  transactions: ["0x81b881c4e28ba07eb5a2f3ba9b7b3216fb6a23875e8dc86fac9c1dac4eab5463"],
+  transactionsRoot: "0x4d2d760315538c7736e52dda29c1ded0b0bd8ab66c5d4e34bb392b45999d964d",
+  uncles: [],
+  withdrawals: [],
+  withdrawalsRoot: "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421"
+}
+
+6、打开remix  重新本地运行 .\geth.exe --dev --http --http.api eth,net,web3 --http.corsdomain="*"
+编写一个合约，部署选择External Http Provider
