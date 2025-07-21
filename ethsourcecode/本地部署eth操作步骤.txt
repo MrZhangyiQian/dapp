@@ -1,7 +1,9 @@
 1、下载源文件 git clone git@github.com:ethereum/go-ethereum.git
 2、cmd当前目录 make geth
 3、 .\geth.exe --dev --http
-4、还是当前目录.\geth attach http://localhost:8545
+4、还是当前目录
+# 方法1：通过HTTP连接（推荐）
+.\geth attach http://localhost:8545
 5、
 Welcome to the Geth JavaScript console!
 

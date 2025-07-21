@@ -2,7 +2,7 @@ package main
 
 import (
 	"dapp/test02/call"
-	"dapp/test02/deploy"
+	// "dapp/test02/deploy"
 	"log"
 	"os"
 
@@ -12,9 +12,9 @@ import (
 
 func main() {
 	// 部署合约
-	deploy.DeployCount()
+	// deploy.DeployCount()
 	// 根据实际路径调整
-	err := godotenv.Load("../.env")
+	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatal(err)
 	}
