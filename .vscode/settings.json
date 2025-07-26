@@ -1,0 +1,16 @@
+{
+    "go.gopath": "",
+    "go.testEnvVars": {
+
+    },
+    "go.toolsGopath": "",
+    "gopls": {
+
+    },
+    "go.delveConfig": {
+
+    },
+    "go.alternateTools": {
+        
+    }
+}
