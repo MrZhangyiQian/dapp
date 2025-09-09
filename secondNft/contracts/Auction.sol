@@ -7,7 +7,6 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "./interfaces/IAuction.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-// 改为这个
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 
 contract Auction is
@@ -31,6 +30,8 @@ contract Auction is
     struct AuctionItem {
         // 卖家
         address seller;
+        // NFT 的原始拥有者
+        address originalOwner;
         // NFT 地址
         address nftContract;
         // ID
@@ -61,6 +62,7 @@ contract Auction is
     // 拍卖创建时触发
     event AuctionCreated(
         address indexed seller,
+        address indexed originalOwner,
         address indexed nftContract,
         uint256 tokenId,
         uint256 startTime,
@@ -77,7 +79,6 @@ contract Auction is
     event Upgraded(address indexed implementation);
 
     // 重写IAcution 方法，initializer函数修改器确保此函数只能被调用一次，避免重复初始化
-    
     function initialize(
         address _seller,
         address _nftContract,
@@ -92,8 +93,11 @@ contract Auction is
 
         ethPriceFeed = AggregatorV3Interface(_priceFeed);
 
+        // 记录原始拥有者
+        address originalOwner = IERC721(_nftContract).ownerOf(_tokenId);
         auction = AuctionItem({
             seller: _seller,
+            originalOwner: originalOwner,
             nftContract: _nftContract,
             tokenId: _tokenId,
             startTime: block.timestamp,
@@ -106,26 +110,28 @@ contract Auction is
 
         emit AuctionCreated(
             _seller,
+            originalOwner, 
             _nftContract,
             _tokenId,
             block.timestamp,
             block.timestamp + _duration
         );
     }
-
+    
     // 用户出价
-    function placeBid() external payable {
+    function placeBid(uint256 _amount) external payable {
         // 验证拍卖是否未结束
         require(block.timestamp <= auction.endTime, "Auction ended");
         // 验证出价必须高于当前最高价
         require(msg.value > auction.highestBid, "Bid too low");
         // 不是卖家
         require(msg.sender != auction.seller, "Seller cannot bid");
-
+        // 出价金额必须与发送金额一致
+        require(msg.value == _amount, "Sent value must match bid amount");
         // 获取ETH/USD价格
         (, int256 price, , , ) = ethPriceFeed.latestRoundData();
         //  ETH 对应的美元价值
-        uint256 usdValue = (msg.value * uint256(price)) / 1e18;
+        uint256 usdValue = (_amount * uint256(price)) / 1e18;
 
         // 更新最高出价
         auction.highestBidder = msg.sender;
@@ -136,13 +142,13 @@ contract Auction is
         bids[msg.sender].push(
             Bid({
                 bidder: msg.sender,
-                amount: msg.value,
+                amount: _amount,
                 timestamp: block.timestamp,
                 usdValue: usdValue
             })
         );
 
-        emit BidPlaced(msg.sender, msg.value, usdValue);
+        emit BidPlaced(msg.sender, _amount, usdValue);
     }
 
     // 拍卖结束后调用
@@ -179,7 +185,7 @@ contract Auction is
             // 如果没有出价，将NFT返还给卖家
             IERC721(auction.nftContract).transferFrom(
                 address(this),
-                auction.seller,
+                auction.originalOwner,
                 auction.tokenId
             );
             // 发送NFT的取消通知
@@ -209,21 +215,5 @@ contract Auction is
         bytes memory
     ) public pure returns (bytes4) {
         return this.onERC721Received.selector;
-    }
-    // 一个 NFT 到拍卖合约中，设定默认拍卖时间
-    // _ NFT 合约地址
-    // _ NFT ID
-    function bindNFT(address _nftContract, uint256 _tokenId) external payable {
-        require(auction.nftContract == address(0), "NFT already bound");
-        require(
-            IERC721(_nftContract).ownerOf(_tokenId) == address(this),
-            "NFT not in contract"
-        );
-
-        auction.nftContract = _nftContract;
-        auction.tokenId = _tokenId;
-        auction.seller = msg.sender;
-        auction.startTime = block.timestamp;
-        auction.endTime = block.timestamp + AUCTION_DURATION; // 可以从常量中获取
     }
 }
