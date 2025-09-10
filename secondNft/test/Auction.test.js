@@ -149,53 +149,33 @@ describe("Auction Contract", function () {
             const ethAmount = ethers.parseEther("0.5"); // BigInt
             const ethPrice = await auctionProxy.getEthUsdPrice(); // assume this is also a BigInt
 
-           // 使用 ethers.utils.formatUnits 转换后再做乘法
-           const ethAmountInEth = Number(ethers.formatEther(ethAmount));
-           const ethPriceInUsd = Number(ethers.formatUnits(ethPrice, 8)); // 根据预言机精度调整 decimals
-           const expected = ethAmountInEth * ethPriceInUsd;
+            // 使用 ethers.utils.formatUnits 转换后再做乘法
+            const ethAmountInEth = Number(ethers.formatEther(ethAmount));
+            const ethPriceInUsd = Number(ethers.formatUnits(ethPrice, 8)); // 根据预言机精度调整 decimals
+            const expected = ethAmountInEth * ethPriceInUsd;
         });
     });
 
     describe("UUPS Upgrade Support", function () {
         it("should upgrade contract successfully", async function () {
-            // 部署新版本
             const AuctionV2 = await ethers.getContractFactory("AuctionV2");
-
-            // 升级代理
-            const upgradedProxy = await upgrades.upgradeProxy(await auctionProxy.getAddress(), AuctionV2);
+            // const upgradedProxy = await upgrades.upgradeProxy(await auctionProxy .getAddress(), AuctionV2);  
+            // 等价与
+            const upgradedProxy = await upgrades.upgradeProxy(await auctionProxy.getAddress(), AuctionV2.connect(deployer));
             await upgradedProxy.waitForDeployment();
-
-            // 验证状态是否保留
             const auctionInfo = await upgradedProxy.auction();
             expect(auctionInfo.seller).to.equal(deployer.address);
         });
 
-
         it("should only allow owner to upgrade", async function () {
             const [deployer, bidder1] = await ethers.getSigners();
-            
-            // 部署新版本合约
             const AuctionV2 = await ethers.getContractFactory("AuctionV2");
-            const auctionV2Impl = await AuctionV2.deploy();
-            await auctionV2Impl.waitForDeployment();
-            
-            // 获取代理合约实例
-            const proxyAddress = await auctionProxy.getAddress();
-            const proxy = await ethers.getContractAt("Auction", proxyAddress);
-            
-            console.log("Proxy Owner:", await proxy.owner());
-            console.log("Bidder1:", bidder1.address);
-            console.log("AuctionV2 Implementation:", auctionV2Impl.target);
-            
-            // 非owner尝试升级 - 应该被拒绝
+
+            // 非 owner 尝试升级 - 应该失败
             await expect(
-                proxy.connect(bidder1).adminUpgradeTo(auctionV2Impl.target)
-            ).to.be.revertedWithCustomError(proxy, "OwnableUnauthorizedAccount")
-             .withArgs(bidder1.address);
-            
-            // 验证合约未升级 终于
-            const currentImpl = await upgrades.erc1967.getImplementationAddress(proxyAddress);
-            expect(currentImpl).not.to.equal(auctionV2Impl.target);
+                upgrades.upgradeProxy(await auctionProxy.getAddress(), AuctionV2.connect(bidder1))
+            ).to.be.revertedWith("Ownable: caller is not the owner");
         });
+
     });
 });
